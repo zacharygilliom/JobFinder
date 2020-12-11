@@ -1,35 +1,36 @@
 package main
 
 import (
-	"context"
+	"encoding/json"
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/zacharygilliom/JobFinder/internal/authtoken"
 	"google.golang.org/api/gmail/v1"
-	"google.golang.org/api/option"
 )
 
-func main() {
-	authtoken.Verify()
-	getMessages()
+type message struct {
+	ID       string `json:"id"`
+	ThreadID string `json:"threadId"`
+}
+type messageList struct {
+	Messages []message `json:"messages"`
 }
 
-func getMessages() {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	gmailService, err := gmail.NewService(ctx, option.WithCredentialsFile("../credentials.json"))
+func main() {
+	serv, user := authtoken.ConnectClient()
+	ml := getMessages(serv, user)
+	fmt.Println(ml.Messages)
+}
+
+func getMessages(serv *gmail.Service, user string) messageList {
+	messages, err := serv.Users.Messages.List(user).Do()
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(gmailService)
+	messageDetails, err := messages.MarshalJSON()
+	var ml messageList
+	json.Unmarshal(messageDetails, &ml)
 
-	messagesCall := gmailService.Users.Messages.List("me")
-	messagesResp, err := messagesCall.Do()
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Println(messagesResp)
-
+	return ml
 }

@@ -69,7 +69,7 @@ func saveToken(path string, token *oauth2.Token) {
 	json.NewEncoder(f).Encode(token)
 }
 
-func Verify() {
+func ConnectClient() (*gmail.Service, string) {
 	// Initializes our auth2 token.
 	b, err := ioutil.ReadFile("../credentials.json")
 	if err != nil {
@@ -95,10 +95,10 @@ func Verify() {
 	}
 	if len(r.Labels) == 0 {
 		fmt.Println("No labels found.")
-		return
 	}
 	fmt.Println("Labels:")
 	for _, l := range r.Labels {
 		fmt.Printf("- %s\n", l.Name)
 	}
+	return srv, user
 }
