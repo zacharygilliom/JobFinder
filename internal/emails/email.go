@@ -10,10 +10,23 @@ import (
 	"google.golang.org/api/gmail/v1"
 )
 
+// Job ...
+type Job struct {
+	Title       string
+	Location    string
+	Description string
+	URL         string
+}
+
 // Email ...
 type Email struct {
 	From string
-	URL  string
+	Jobs []Job
+}
+
+// Emails ...
+type Emails struct {
+	List []Email
 }
 
 // Message ...
@@ -42,43 +55,42 @@ func GetMessageIDs(serv *gmail.Service, user string) MessageList {
 
 // GetMessages ...
 func (ml *MessageList) GetMessages(serv *gmail.Service, user string, header string) {
-	for _, mess := range ml.Messages {
-		messages, err := serv.Users.Messages.Get(user, mess.ID).Do()
+	var ems Emails
+	for _, message := range ml.Messages {
+		mess, err := serv.Users.Messages.Get(user, message.ID).Do()
 		if err != nil {
 			log.Fatal(err)
 		}
-		var em Email
-		encodedMessage := messages.Payload.Body.Data
-		encodedHeaders := messages.Payload.Headers
-		encodedData := messages.Payload.Parts
-		fmt.Println(encodedData)
-		for _, head := range encodedHeaders {
-			fmt.Println(head)
+		Headers := mess.Payload.Headers
+		encodedPartsData := mess.Payload.Parts
+		for _, head := range Headers {
 			if head.Name == header {
-				em.From = head.Value
+				if strings.Contains(head.Value, "alert@indeed.com") {
+					var em Email
+					em.From = "Indeed"
+					jobsPart, err := base64.URLEncoding.DecodeString(encodedPartsData[0].Body.Data)
+					jobsPartString := string(jobsPart)
+					if err != nil {
+						log.Fatal(err)
+					}
+					em.GetJobsURL(jobsPartString)
+					ems.List = append(ems.List, em)
+				}
 			}
 		}
-		if strings.Contains(em.From, "alert@indeed.com") {
-			fmt.Println(em.From)
-			fmt.Println(encodedMessage)
-			byteMessage, err := base64.URLEncoding.DecodeString(encodedMessage)
-			for _, part := range encodedData {
-				stringPart, err := base64.URLEncoding.DecodeString(part.Body.Data)
-				if err != nil {
-					log.Fatal(err)
-				}
-				fmt.Println(string(stringPart))
-			}
-			if err != nil {
-				fmt.Printf("Error decoding string: %s ", err.Error())
-				return
-			}
+	}
+	fmt.Println(ems.List)
+}
 
-			fmt.Println("*********************************************************  New Message **********************************************")
-			fmt.Println(byteMessage)
-			fmt.Println("*********************************************************  End Of Message *******************************************")
+// GetJobsURL ...
+func (em *Email) GetJobsURL(emailBody string) {
+	separatedStrings := strings.Split(emailBody, "\n")
+	for _, val := range separatedStrings {
+		var j Job
+		if strings.Contains(val, "https://www.indeed.com/rc/clk/") {
+			j.URL = val
+			em.Jobs = append(em.Jobs, j)
 		}
 
 	}
-
 }
