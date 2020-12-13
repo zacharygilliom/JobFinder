@@ -3,7 +3,9 @@ package email
 import (
 	"encoding/base64"
 	"encoding/json"
-	"io/ioutil" "log" "strings"
+	"io/ioutil"
+	"log"
+	"strings"
 
 	"net/http"
 
