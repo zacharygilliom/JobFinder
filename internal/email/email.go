@@ -1,13 +1,15 @@
-package emails
+package email
 
 import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"strings"
 
 	"google.golang.org/api/gmail/v1"
+	"net/http"
 )
 
 // Job ...
@@ -54,7 +56,7 @@ func GetMessageIDs(serv *gmail.Service, user string) MessageList {
 }
 
 // GetMessages ...
-func (ml *MessageList) GetMessages(serv *gmail.Service, user string, header string) {
+func (ml *MessageList) GetMessages(serv *gmail.Service, user string, header string) Emails {
 	var ems Emails
 	for _, message := range ml.Messages {
 		mess, err := serv.Users.Messages.Get(user, message.ID).Do()
@@ -79,18 +81,45 @@ func (ml *MessageList) GetMessages(serv *gmail.Service, user string, header stri
 			}
 		}
 	}
-	fmt.Println(ems.List)
+	//fmt.Println(ems.List)
+	return ems
 }
 
 // GetJobsURL ...
 func (em *Email) GetJobsURL(emailBody string) {
 	separatedStrings := strings.Split(emailBody, "\n")
 	for _, val := range separatedStrings {
+		trimmedURL := strings.TrimSuffix(val, "\r")
 		var j Job
-		if strings.Contains(val, "https://www.indeed.com/rc/clk/") {
-			j.URL = val
+		if strings.Contains(trimmedURL, "https://www.indeed.com/rc/clk/") {
+			fmt.Println(val)
+			j.URL = trimmedURL
 			em.Jobs = append(em.Jobs, j)
 		}
 
+	}
+}
+
+// ParseSite ...
+func (j *Job) ParseSite() {
+	resp, err := http.Get(j.URL)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(string(body))
+	return
+}
+
+// GetJobInfo ...
+func (ems *Emails) GetJobInfo() {
+	for _, em := range ems.List {
+		for _, j := range em.Jobs {
+			j.ParseSite()
+		}
 	}
 }

@@ -7,6 +7,7 @@ import (
 
 func main() {
 	serv, user := authtoken.ConnectClient()
-	ml := emails.GetMessageIDs(serv, user)
-	ml.GetMessages(serv, user, "From")
+	ml := email.GetMessageIDs(serv, user)
+	ems := ml.GetMessages(serv, user, "From")
+	ems.GetJobInfo()
 }
