@@ -3,13 +3,11 @@ package email
 import (
 	"encoding/base64"
 	"encoding/json"
-	"fmt"
-	"io/ioutil"
-	"log"
-	"strings"
+	"io/ioutil" "log" "strings"
+
+	"net/http"
 
 	"google.golang.org/api/gmail/v1"
-	"net/http"
 )
 
 // Job ...
@@ -92,7 +90,6 @@ func (em *Email) GetJobsURL(emailBody string) {
 		trimmedURL := strings.TrimSuffix(val, "\r")
 		var j Job
 		if strings.Contains(trimmedURL, "https://www.indeed.com/rc/clk/") {
-			fmt.Println(val)
 			j.URL = trimmedURL
 			em.Jobs = append(em.Jobs, j)
 		}
@@ -101,7 +98,7 @@ func (em *Email) GetJobsURL(emailBody string) {
 }
 
 // ParseSite ...
-func (j *Job) ParseSite() {
+func (j *Job) ParseSite() string {
 	resp, err := http.Get(j.URL)
 	if err != nil {
 		log.Fatal(err)
@@ -111,15 +108,15 @@ func (j *Job) ParseSite() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(string(body))
-	return
+	return string(body)
 }
 
 // GetJobInfo ...
-func (ems *Emails) GetJobInfo() {
+func (ems *Emails) GetJobInfo(c chan string) {
 	for _, em := range ems.List {
 		for _, j := range em.Jobs {
-			j.ParseSite()
+			c <- j.ParseSite()
 		}
 	}
+	close(c)
 }
