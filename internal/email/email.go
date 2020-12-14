@@ -3,6 +3,7 @@ package email
 import (
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"strings"
@@ -100,7 +101,7 @@ func (em *Email) GetJobsURL(emailBody string) {
 }
 
 // ParseSite ...
-func (j *Job) ParseSite() string {
+func (j *Job) GetBody() string {
 	resp, err := http.Get(j.URL)
 	if err != nil {
 		log.Fatal(err)
@@ -110,15 +111,20 @@ func (j *Job) ParseSite() string {
 	if err != nil {
 		log.Fatal(err)
 	}
+	fmt.Println("website parsed")
 	return string(body)
 }
 
 // GetJobInfo ...
-func (ems *Emails) GetJobInfo(c chan string) {
+func (ems *Emails) GetJobInfo(c chan<- string) {
 	for _, em := range ems.List {
 		for _, j := range em.Jobs {
-			c <- j.ParseSite()
+			c <- j.GetBody()
 		}
 	}
-	close(c)
+}
+
+func ParseBody(val string) {
+
+	return
 }

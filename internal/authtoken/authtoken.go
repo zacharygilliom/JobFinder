@@ -96,9 +96,11 @@ func ConnectClient() (*gmail.Service, string) {
 	if len(r.Labels) == 0 {
 		fmt.Println("No labels found.")
 	}
-	fmt.Println("Labels:")
-	for _, l := range r.Labels {
-		fmt.Printf("- %s\n", l.Name)
-	}
+	/*
+		fmt.Println("Labels:")
+		for _, l := range r.Labels {
+			fmt.Printf("- %s\n", l.Name)
+		}
+	*/
 	return srv, user
 }
