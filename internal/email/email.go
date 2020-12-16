@@ -4,12 +4,10 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"strings"
 
-	"net/http"
-
+	"github.com/gocolly/colly/v2"
 	"google.golang.org/api/gmail/v1"
 )
 
@@ -101,30 +99,19 @@ func (em *Email) GetJobsURL(emailBody string) {
 }
 
 // ParseSite ...
-func (j *Job) GetBody() string {
-	resp, err := http.Get(j.URL)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		log.Fatal(err)
-	}
+func (j *Job) ParseSite(c *colly.Collector) {
+	c.OnHTML("title", func(e *colly.HTMLElement) {
+		j.Title = e.Text
+	})
+	c.Visit(j.URL)
 	fmt.Println("website parsed")
-	return string(body)
 }
 
 // GetJobInfo ...
-func (ems *Emails) GetJobInfo(c chan<- string) {
+func (ems *Emails) GetJobInfo(c *colly.Collector) {
 	for _, em := range ems.List {
 		for _, j := range em.Jobs {
-			c <- j.GetBody()
+			j.ParseSite(c)
 		}
 	}
-}
-
-func ParseBody(val string) {
-
-	return
 }
