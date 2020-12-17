@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"regexp"
 	"strings"
 
 	"github.com/gocolly/colly/v2"
@@ -17,6 +18,7 @@ type Job struct {
 	Location    string
 	Description string
 	URL         string
+	Valid       bool
 }
 
 // Email ...
@@ -103,8 +105,10 @@ func (j *Job) ParseSite(c *colly.Collector) {
 	c.OnHTML("title", func(e *colly.HTMLElement) {
 		j.Title = e.Text
 	})
+	c.OnHTML("body", func(e *colly.HTMLElement) {
+		j.Description = e.Text
+	})
 	c.Visit(j.URL)
-	fmt.Println("website parsed")
 }
 
 // GetJobInfo ...
@@ -112,6 +116,13 @@ func (ems *Emails) GetJobInfo(c *colly.Collector) {
 	for _, em := range ems.List {
 		for _, j := range em.Jobs {
 			j.ParseSite(c)
+			re := regexp.MustCompile(`python|Python|entry level|Entry Level|entry-level|Entry-Level|Entry-leve|Go|golang|go|Golang`)
+			j.Valid = false
+			if re.MatchString(j.Description) {
+				j.Valid = true
+				fmt.Println(j.Title)
+				fmt.Println(j.URL)
+			}
 		}
 	}
 }
