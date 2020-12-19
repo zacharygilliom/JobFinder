@@ -101,28 +101,33 @@ func (em *Email) GetJobsURL(emailBody string) {
 }
 
 // ParseSite ...
-func (j *Job) ParseSite(c *colly.Collector) {
+func (j *Job) ParseSite() {
+	c := colly.NewCollector()
+	fmt.Println("GoRoutine Executed")
 	c.OnHTML("title", func(e *colly.HTMLElement) {
 		j.Title = e.Text
+		fmt.Println(j.Title)
 	})
 	c.OnHTML("body", func(e *colly.HTMLElement) {
 		j.Description = e.Text
+		re := regexp.MustCompile(`python|Python|golang|Golang`)
+		j.Valid = false
+		if re.MatchString(j.Description) {
+			j.Valid = true
+		}
 	})
 	c.Visit(j.URL)
+	fmt.Println("GoRoutine Finished")
 }
 
 // GetJobInfo ...
-func (ems *Emails) GetJobInfo(c *colly.Collector) {
+func (ems *Emails) GetJobInfo() {
 	for _, em := range ems.List {
 		for _, j := range em.Jobs {
-			j.ParseSite(c)
-			re := regexp.MustCompile(`python|Python|entry level|Entry Level|entry-level|Entry-Level|Entry-leve|Go|golang|go|Golang`)
-			j.Valid = false
-			if re.MatchString(j.Description) {
-				j.Valid = true
-				fmt.Println(j.Title)
+			if j.Valid {
 				fmt.Println(j.URL)
 			}
+			//j.ParseSite(c)
 		}
 	}
 }
