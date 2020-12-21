@@ -90,13 +90,14 @@ func (ml *MessageList) GetMessages(serv *gmail.Service, user string, header stri
 // GetJobsURL ...
 func (em *Email) GetJobsURL(emailBody string) {
 	//fmt.Println(emailBody)
-	rxRelaxed := xurls.Relaxed()
+	rxRelaxed := xurls.Strict()
 	allStrings := rxRelaxed.FindAllString(emailBody, -1)
 	//fmt.Println(allStrings)
 	//separatedStrings := strings.Split(emailBody, "\n")
 	//fmt.Println(separatedStrings)
 	for _, val := range allStrings {
 		//trimmedURL := strings.TrimSuffix(val, "\r")
+		fmt.Println(val)
 		var j Job
 		if strings.Contains(val, "https://www.indeed.com/rc/clk/") {
 			j.URL = val
@@ -107,7 +108,7 @@ func (em *Email) GetJobsURL(emailBody string) {
 }
 
 // ParseSite ...
-func (j *Job) ParseSite() {
+func ParseSite(j Job) Job {
 	c := colly.NewCollector()
 	c.OnHTML("title", func(e *colly.HTMLElement) {
 		j.Title = e.Text
@@ -121,7 +122,7 @@ func (j *Job) ParseSite() {
 	if re.MatchString(j.Description) {
 		j.Valid = true
 	}
-	fmt.Printf("Job title: %v\n", j.Title)
+	return j
 	//fmt.Println("GoRoutine Finished")
 }
 
@@ -132,7 +133,6 @@ func (ems *Emails) GetJobInfo() {
 			if j.Valid {
 				fmt.Println(j.URL)
 			}
-			//j.ParseSite(c)
 		}
 	}
 }
