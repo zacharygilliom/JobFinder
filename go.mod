@@ -10,4 +10,5 @@ require (
 	golang.org/x/sys v0.0.0-20201211090839-8ad439b19e0f // indirect
 	google.golang.org/api v0.36.0
 	google.golang.org/genproto v0.0.0-20201211151036-40ec1c210f7a // indirect
+	mvdan.cc/xurls/v2 v2.2.0
 )

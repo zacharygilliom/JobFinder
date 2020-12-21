@@ -10,6 +10,7 @@ import (
 
 	"github.com/gocolly/colly/v2"
 	"google.golang.org/api/gmail/v1"
+	"mvdan.cc/xurls/v2"
 )
 
 // Job ...
@@ -88,12 +89,17 @@ func (ml *MessageList) GetMessages(serv *gmail.Service, user string, header stri
 
 // GetJobsURL ...
 func (em *Email) GetJobsURL(emailBody string) {
-	separatedStrings := strings.Split(emailBody, "\n")
-	for _, val := range separatedStrings {
-		trimmedURL := strings.TrimSuffix(val, "\r")
+	//fmt.Println(emailBody)
+	rxRelaxed := xurls.Relaxed()
+	allStrings := rxRelaxed.FindAllString(emailBody, -1)
+	//fmt.Println(allStrings)
+	//separatedStrings := strings.Split(emailBody, "\n")
+	//fmt.Println(separatedStrings)
+	for _, val := range allStrings {
+		//trimmedURL := strings.TrimSuffix(val, "\r")
 		var j Job
-		if strings.Contains(trimmedURL, "https://www.indeed.com/rc/clk/") {
-			j.URL = trimmedURL
+		if strings.Contains(val, "https://www.indeed.com/rc/clk/") {
+			j.URL = val
 			em.Jobs = append(em.Jobs, j)
 		}
 
@@ -103,21 +109,20 @@ func (em *Email) GetJobsURL(emailBody string) {
 // ParseSite ...
 func (j *Job) ParseSite() {
 	c := colly.NewCollector()
-	fmt.Println("GoRoutine Executed")
 	c.OnHTML("title", func(e *colly.HTMLElement) {
 		j.Title = e.Text
-		fmt.Println(j.Title)
 	})
 	c.OnHTML("body", func(e *colly.HTMLElement) {
 		j.Description = e.Text
-		re := regexp.MustCompile(`python|Python|golang|Golang`)
-		j.Valid = false
-		if re.MatchString(j.Description) {
-			j.Valid = true
-		}
 	})
 	c.Visit(j.URL)
-	fmt.Println("GoRoutine Finished")
+	re := regexp.MustCompile(`python|Python|golang|Golang`)
+	j.Valid = false
+	if re.MatchString(j.Description) {
+		j.Valid = true
+	}
+	fmt.Printf("Job title: %v\n", j.Title)
+	//fmt.Println("GoRoutine Finished")
 }
 
 // GetJobInfo ...
