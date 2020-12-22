@@ -97,10 +97,11 @@ func (em *Email) GetJobsURL(emailBody string) {
 	//fmt.Println(separatedStrings)
 	for _, val := range allStrings {
 		//trimmedURL := strings.TrimSuffix(val, "\r")
-		fmt.Println(val)
 		var j Job
 		if strings.Contains(val, "https://www.indeed.com/rc/clk/") {
-			j.URL = val
+			viewval := strings.Replace(val, "rc/clk/dl", "viewjob", 1)
+			//fmt.Println(viewval)
+			j.URL = viewval
 			em.Jobs = append(em.Jobs, j)
 		}
 
@@ -110,10 +111,11 @@ func (em *Email) GetJobsURL(emailBody string) {
 // ParseSite ...
 func ParseSite(j Job) Job {
 	c := colly.NewCollector()
-	c.OnHTML("title", func(e *colly.HTMLElement) {
+	c.OnHTML("body.div.h1.icl-u-xs-mb--xs icl-u-xs-mt--none jobsearch-JobInfoHeader-Title", func(e *colly.HTMLElement) {
 		j.Title = e.Text
+		fmt.Println(e.Text)
 	})
-	c.OnHTML("body", func(e *colly.HTMLElement) {
+	c.OnHTML("div.jobsearch-jobDescriptionText", func(e *colly.HTMLElement) {
 		j.Description = e.Text
 	})
 	c.Visit(j.URL)
